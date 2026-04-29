@@ -5,11 +5,23 @@
 
 #![forbid(unsafe_code)]
 
+pub mod app;
+pub mod assets;
 pub mod diagnostics;
+pub mod layer;
+pub mod renderer;
+pub mod window;
 
-use diagnostics::{DiagnosticsConfig, DiagnosticsLevel, LogBridge, LogFormat};
-use serde::Deserialize;
 use thiserror::Error;
+
+pub use app::{AppConfig, AppConfigLayer};
+pub use assets::{AssetsConfig, AssetsConfigLayer};
+pub use diagnostics::{
+    DiagnosticsConfig, DiagnosticsConfigLayer, DiagnosticsLevel, LogBridge, LogFormat,
+};
+pub use layer::{ConfigLayer, parse_config_layer};
+pub use renderer::{RendererConfig, RendererConfigLayer};
+pub use window::{WindowConfig, WindowConfigLayer};
 
 pub type ConfigResult<T> = std::result::Result<T, ConfigError>;
 
@@ -52,88 +64,6 @@ impl Default for LuneConfig {
                 search_paths: vec!["assets".to_owned()],
             },
         }
-    }
-}
-
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub struct AppConfig {
-    pub name: String,
-}
-
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub struct WindowConfig {
-    pub title: String,
-    pub width: u32,
-    pub height: u32,
-    pub vsync: bool,
-}
-
-#[derive(Clone, Debug, PartialEq)]
-pub struct RendererConfig {
-    pub backend: String,
-    pub clear_color: [f32; 4],
-}
-
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub struct AssetsConfig {
-    pub search_paths: Vec<String>,
-}
-
-#[derive(Clone, Debug, Default, Deserialize, PartialEq)]
-#[serde(default, deny_unknown_fields)]
-pub struct ConfigLayer {
-    pub app: Option<AppConfigLayer>,
-    pub diagnostics: Option<DiagnosticsConfigLayer>,
-    pub window: Option<WindowConfigLayer>,
-    pub renderer: Option<RendererConfigLayer>,
-    pub assets: Option<AssetsConfigLayer>,
-}
-
-#[derive(Clone, Debug, Default, Deserialize, PartialEq, Eq)]
-#[serde(default, deny_unknown_fields)]
-pub struct AppConfigLayer {
-    pub name: Option<String>,
-}
-
-#[derive(Clone, Debug, Default, Deserialize, PartialEq, Eq)]
-#[serde(default, deny_unknown_fields)]
-pub struct DiagnosticsConfigLayer {
-    pub level: Option<DiagnosticsLevel>,
-    pub format: Option<LogFormat>,
-    pub log_bridge: Option<LogBridge>,
-}
-
-#[derive(Clone, Debug, Default, Deserialize, PartialEq, Eq)]
-#[serde(default, deny_unknown_fields)]
-pub struct WindowConfigLayer {
-    pub title: Option<String>,
-    pub width: Option<u32>,
-    pub height: Option<u32>,
-    pub vsync: Option<bool>,
-}
-
-#[derive(Clone, Debug, Default, Deserialize, PartialEq)]
-#[serde(default, deny_unknown_fields)]
-pub struct RendererConfigLayer {
-    pub backend: Option<String>,
-    pub clear_color: Option<[f32; 4]>,
-}
-
-#[derive(Clone, Debug, Default, Deserialize, PartialEq, Eq)]
-#[serde(default, deny_unknown_fields)]
-pub struct AssetsConfigLayer {
-    pub search_paths: Option<Vec<String>>,
-}
-
-pub fn parse_config_layer(source: impl Into<String>, toml_text: &str) -> ConfigResult<ConfigLayer> {
-    let source = source.into();
-
-    match toml::from_str(toml_text) {
-        Ok(config_layer) => Ok(config_layer),
-        Err(err) => Err(ConfigError::Parse {
-            source_name: source,
-            message: err.to_string(),
-        }),
     }
 }
 

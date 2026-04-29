@@ -8,6 +8,14 @@ pub struct DiagnosticsConfig {
     pub log_bridge: LogBridge,
 }
 
+#[derive(Clone, Debug, Default, Deserialize, PartialEq, Eq)]
+#[serde(default, deny_unknown_fields)]
+pub struct DiagnosticsConfigLayer {
+    pub level: Option<DiagnosticsLevel>,
+    pub format: Option<LogFormat>,
+    pub log_bridge: Option<LogBridge>,
+}
+
 impl DiagnosticsConfig {
     pub fn developer() -> Self {
         Self {

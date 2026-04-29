@@ -20,6 +20,11 @@ systems directly, with AI acting as a guide, test author, and reviewer.
 - Tests should compile and fail at runtime where possible. Compile-failing API
   sketches are allowed only when clearly marked.
 - Learning docs should start from [`docs/learning/TEMPLATE.md`](docs/learning/TEMPLATE.md).
+- Crate `lib.rs` files should stay focused: module declarations, public
+  re-exports, crate-level docs, crate error/result types, and the crate's core
+  implementation entry points may live there. Supporting structs, enums, and
+  use-case-specific types should move into modules unless they are tightly
+  coupled to the crate root.
 - Before starting a topic, read this file, the decision ledger, and relevant
   ADRs.
 
