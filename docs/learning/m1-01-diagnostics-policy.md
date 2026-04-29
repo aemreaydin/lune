@@ -94,7 +94,8 @@ Tracing setup is global process state. Initialize it once, as early as possible
 in a binary entry point:
 
 ```rust
-use lune_diagnostics::{DiagnosticsConfig, DiagnosticsLevel, init_diagnostics};
+use lune_config::{DiagnosticsConfig, DiagnosticsLevel};
+use lune_diagnostics::init_diagnostics;
 
 fn main() -> anyhow::Result<()> {
     init_diagnostics(
@@ -127,7 +128,7 @@ It does not belong in:
 
 ### What `init_diagnostics` Should Do
 
-M1.3 should turn `DiagnosticsConfig` into a tracing subscriber:
+M1.3 should turn `lune_config::DiagnosticsConfig` into a tracing subscriber:
 
 1. Convert `DiagnosticsLevel` into a root verbosity directive.
    `Trace` maps to `trace`, `Info` to `info`, `Warn` to `warn`, and `Error` to
@@ -235,8 +236,10 @@ diagnostic setup and shared error conventions.
 
 The first public API is deliberately small:
 
-- `DiagnosticsConfig` describes level, format, and `log` bridge policy.
-- `DiagnosticsLevel` keeps root verbosity typed as trace, info, warn, or error.
+- `lune_config::DiagnosticsConfig` describes level, format, and `log` bridge
+  policy.
+- `lune_config::DiagnosticsLevel` keeps root verbosity typed as trace, info,
+  warn, or error.
 - `init_diagnostics` installs the process-wide subscriber.
 - `DiagnosticsError` reports duplicate initialization and bridge setup failures
   as typed errors. If Lune later accepts arbitrary filter directives, invalid
@@ -277,8 +280,8 @@ implements tracing setup.
 
 ## Implementation Handles
 
-- Key types: `DiagnosticsConfig`, `DiagnosticsLevel`, `LogFormat`, `LogBridge`,
-  `DiagnosticsError`.
+- Key types: `lune_config::DiagnosticsConfig`, `DiagnosticsLevel`,
+  `LogFormat`, `LogBridge`, and `DiagnosticsError`.
 - Key invariant: diagnostics subscriber setup is process-global and should be
   installed through one controlled API.
 - Error cases: duplicate global subscriber setup and log bridge installation

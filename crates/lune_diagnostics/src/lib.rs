@@ -31,9 +31,10 @@
 
 #![forbid(unsafe_code)]
 
+use lune_config::diagnostics::{DiagnosticsConfig, DiagnosticsLevel, LogBridge, LogFormat};
 use thiserror::Error;
 
-pub type LuneResult<T> = std::result::Result<T, DiagnosticsError>;
+pub type DiagnosticsResult<T> = std::result::Result<T, DiagnosticsError>;
 
 #[derive(Debug, Error, PartialEq, Eq)]
 pub enum DiagnosticsError {
@@ -44,64 +45,7 @@ pub enum DiagnosticsError {
     LogBridgeInstall,
 }
 
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
-pub enum DiagnosticsLevel {
-    Trace,
-    Debug,
-    #[default]
-    Info,
-    Warn,
-    Error,
-}
-
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub struct DiagnosticsConfig {
-    pub level: DiagnosticsLevel,
-    pub format: LogFormat,
-    pub log_bridge: LogBridge,
-}
-
-impl DiagnosticsConfig {
-    pub fn developer() -> Self {
-        Self {
-            level: DiagnosticsLevel::Info,
-            format: LogFormat::Compact,
-            log_bridge: LogBridge::Enabled,
-        }
-    }
-
-    pub fn with_level(mut self, level: DiagnosticsLevel) -> Self {
-        self.level = level;
-        self
-    }
-
-    pub fn with_format(mut self, format: LogFormat) -> Self {
-        self.format = format;
-        self
-    }
-
-    pub fn with_log_bridge(mut self, log_bridge: LogBridge) -> Self {
-        self.log_bridge = log_bridge;
-        self
-    }
-}
-
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
-pub enum LogFormat {
-    #[default]
-    Compact,
-    Pretty,
-}
-
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
-pub enum LogBridge {
-    Disabled,
-
-    #[default]
-    Enabled,
-}
-
-pub fn init_diagnostics(config: DiagnosticsConfig) -> LuneResult<()> {
+pub fn init_diagnostics(config: DiagnosticsConfig) -> DiagnosticsResult<()> {
     if config.log_bridge == LogBridge::Enabled {
         tracing_log::LogTracer::init().map_err(|_| DiagnosticsError::LogBridgeInstall)?
     }

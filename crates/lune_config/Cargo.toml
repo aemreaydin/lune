@@ -1,5 +1,5 @@
 [package]
-name = "lune_diagnostics"
+name = "lune_config"
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
@@ -9,9 +9,6 @@ license.workspace = true
 path = "src/lib.rs"
 
 [dependencies]
-log.workspace = true
-lune_config = { path = "../lune_config" }
+serde.workspace = true
 thiserror.workspace = true
-tracing.workspace = true
-tracing-log.workspace = true
-tracing-subscriber.workspace = true
+toml.workspace = true

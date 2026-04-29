@@ -153,11 +153,11 @@ overrides to produce one effective config.
 
 Acceptance criteria:
 
-- [ ] learning doc explains config layering
-- [ ] config structs deserialize from TOML
-- [ ] defaults + root + showcase merge is tested
-- [ ] nested tables merge and arrays replace
-- [ ] unknown fields error in strict mode
+- [x] learning doc explains config layering
+- [x] config structs deserialize from TOML
+- [x] defaults + root + showcase merge is tested
+- [x] nested tables merge and arrays replace
+- [x] unknown fields error in strict mode
 
 ## Milestone 2: Memory and Collections
 

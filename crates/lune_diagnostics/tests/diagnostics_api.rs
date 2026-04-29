@@ -1,36 +1,5 @@
-use lune_diagnostics::{
-    DiagnosticsConfig, DiagnosticsError, DiagnosticsLevel, LogBridge, LogFormat, init_diagnostics,
-};
-
-#[test]
-fn developer_config_uses_human_local_defaults() {
-    let config = DiagnosticsConfig::developer();
-
-    assert_eq!(config.level, DiagnosticsLevel::Info);
-    assert_eq!(config.format, LogFormat::Compact);
-    assert_eq!(config.log_bridge, LogBridge::Enabled);
-}
-
-#[test]
-fn config_builders_override_independent_fields() {
-    let config = DiagnosticsConfig {
-        level: DiagnosticsLevel::Warn,
-        format: LogFormat::Compact,
-        log_bridge: LogBridge::Enabled,
-    }
-    .with_level(DiagnosticsLevel::Trace)
-    .with_format(LogFormat::Pretty)
-    .with_log_bridge(LogBridge::Disabled);
-
-    assert_eq!(config.level, DiagnosticsLevel::Trace);
-    assert_eq!(config.format, LogFormat::Pretty);
-    assert_eq!(config.log_bridge, LogBridge::Disabled);
-}
-
-#[test]
-fn diagnostics_level_defaults_to_info() {
-    assert_eq!(DiagnosticsLevel::default(), DiagnosticsLevel::Info);
-}
+use lune_config::diagnostics::{DiagnosticsConfig, DiagnosticsLevel, LogBridge, LogFormat};
+use lune_diagnostics::{DiagnosticsError, init_diagnostics};
 
 #[test]
 fn valid_setup_installs_global_subscriber_and_rejects_second_initialization() {

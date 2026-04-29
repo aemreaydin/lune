@@ -13,6 +13,10 @@ systems directly, with AI acting as a guide, test author, and reviewer.
   asked.
 - For each topic, AI explains the concept, alternatives, industry examples,
   and Lune architecture impact before writing tests.
+- AI-written tests should be comprehensive enough to define the expected
+  behavior, not just prove the happy path. Cover defaults, builders or
+  constructors, success cases, typed error cases, edge cases, and regression
+  risks that are practical for the topic.
 - Tests should compile and fail at runtime where possible. Compile-failing API
   sketches are allowed only when clearly marked.
 - Learning docs should start from [`docs/learning/TEMPLATE.md`](docs/learning/TEMPLATE.md).
@@ -47,6 +51,7 @@ crates/
   lune_math/
   lune_memory/
   lune_collections/
+  lune_config/
   lune_perf/
   lune_diagnostics/
   lune_debug/
@@ -85,7 +90,9 @@ used first for command aliases.
 
 Base crates:
 
+- `lune_config`: TOML config types and defaults/root/showcase merge semantics
 - `lune_diagnostics`: typed error/logging setup, tracing subscriber helpers
+  that consume diagnostics config from `lune_config`
 - `lune_memory`: allocators, arenas, pools, frame allocators, handle allocators
 - `lune_collections`: custom small game-oriented containers
 - `lune_math`: `glam` re-export and engine math helpers
@@ -293,7 +300,8 @@ A topic is done only when:
 - alternatives and tradeoffs are documented
 - industry examples are included
 - relation to Lune architecture is documented
-- AI-written failing tests exist
+- AI-written failing tests exist and cover success paths, failure paths, edge
+  cases, and public API contracts that are practical for the topic
 - user implementation makes tests pass
 - public API is reviewed
 - stale scaffolding is removed or explicitly retained
