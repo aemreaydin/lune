@@ -106,9 +106,9 @@ errors and why engine code uses structured tracing.
 
 Acceptance criteria:
 
-- [ ] learning doc explains `thiserror`, `anyhow`, `tracing`, and `log`
-- [ ] alternatives and tradeoffs are documented
-- [ ] failing tests define the expected diagnostics/config API shape
+- [x] learning doc explains `thiserror`, `anyhow`, `tracing`, and `log`
+- [x] alternatives and tradeoffs are documented
+- [x] failing tests define the expected diagnostics/config API shape
 
 ### M1.2 Create `lune_diagnostics` API Stubs
 
@@ -121,10 +121,10 @@ functions available without duplicating logging code.
 
 Acceptance criteria:
 
-- [ ] `lune_diagnostics` exists
-- [ ] public setup API is stubbed
-- [ ] typed error examples compile
-- [ ] tests fail at intentional `todo!()` boundaries
+- [x] `lune_diagnostics` exists
+- [x] public setup API is stubbed
+- [x] typed error examples compile
+- [x] tests fail at intentional `todo!()` boundaries
 
 ### M1.3 Implement Tracing Subscriber Setup
 
@@ -137,10 +137,10 @@ subsystem context and configurable verbosity.
 
 Acceptance criteria:
 
-- [ ] subscriber setup can be called once safely
-- [ ] log filtering can be configured
-- [ ] dependency `log` records can be bridged into `tracing` if enabled
-- [ ] tests verify init behavior where practical
+- [x] subscriber setup can be called once safely
+- [x] log filtering can be configured
+- [x] dependency `log` records can be bridged into `tracing` if enabled
+- [x] tests verify init behavior where practical
 
 ### M1.4 Define Config Types and Merge Semantics
 

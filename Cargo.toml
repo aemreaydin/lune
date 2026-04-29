@@ -7,3 +7,10 @@ version = "0.1.0"
 edition = "2024"
 rust-version = "1.95.0"
 license = "MIT OR Apache-2.0"
+
+[workspace.dependencies]
+log = "0.4"
+thiserror = "2"
+tracing = "0.1"
+tracing-log = "0.2"
+tracing-subscriber = { version = "0.3", features = ["env-filter", "fmt"] }

@@ -18,7 +18,7 @@ test: require-nextest
 doc-test:
     cargo test --workspace --doc
 
-check: fmt-check clippy test doc-test
+check: fmt-check clippy doc-test test
 
 tree-dups:
     cargo tree -d
