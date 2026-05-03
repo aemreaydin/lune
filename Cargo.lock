@@ -83,6 +83,9 @@ version = "0.1.0"
 [[package]]
 name = "lune_memory"
 version = "0.1.0"
+dependencies = [
+ "thiserror",
+]
 
 [[package]]
 name = "matchers"

@@ -172,9 +172,9 @@ alignment, lifetimes, and why engines avoid hot-path heap churn.
 
 Acceptance criteria:
 
-- [ ] learning doc covers allocator alternatives and engine examples
-- [ ] unsafe boundaries and invariants are documented
-- [ ] tests define expected allocator behavior before implementation
+- [x] learning doc covers allocator alternatives and engine examples
+- [x] unsafe boundaries and invariants are documented
+- [x] tests define expected allocator behavior before implementation
 
 ### M2.2 Create `lune_memory` Allocator Interfaces
 

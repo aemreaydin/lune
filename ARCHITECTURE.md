@@ -13,6 +13,7 @@ systems directly, with AI acting as a guide, test author, and reviewer.
   asked.
 - For each topic, AI explains the concept, alternatives, industry examples,
   and Lune architecture impact before writing tests.
+- Learning docs should end with additional reading references as direct URLs.
 - AI-written tests should be comprehensive enough to define the expected
   behavior, not just prove the happy path. Cover defaults, builders or
   constructors, success cases, typed error cases, edge cases, and regression
@@ -305,6 +306,7 @@ A topic is done only when:
 - alternatives and tradeoffs are documented
 - industry examples are included
 - relation to Lune architecture is documented
+- additional reading references are listed as direct URLs at the end
 - AI-written failing tests exist and cover success paths, failure paths, edge
   cases, and public API contracts that are practical for the topic
 - user implementation makes tests pass

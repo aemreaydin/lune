@@ -69,3 +69,11 @@ just check
 ## Follow-Up Topics
 
 List adjacent topics that should come later.
+
+## Additional Reading
+
+List a small set of direct URLs for further study. Prefer primary documentation,
+reference implementations, and high-quality articles that deepen the topic
+without replacing Lune's learning implementation.
+
+- Topic reference: https://example.com/reference
