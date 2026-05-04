@@ -187,10 +187,10 @@ engine-owned memory paths.
 
 Acceptance criteria:
 
-- [ ] allocator traits/types are defined
-- [ ] allocation result carries pointer/size/alignment metadata as needed
-- [ ] failure behavior is explicit
-- [ ] tests compile and fail until implementation exists
+- [x] allocator traits/types are defined
+- [x] allocation result carries pointer/size/alignment metadata as needed
+- [x] failure behavior is explicit
+- [x] tests compile and fail until implementation exists
 
 ### M2.3 Implement Linear Allocator
 

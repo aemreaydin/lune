@@ -1,4 +1,6 @@
-use crate::{AllocationStats, MemoryError, MemoryLayout, MemoryResult};
+use crate::{
+    AllocationStats, Allocator, MemoryError, MemoryLayout, MemoryResult, ResettableAllocator,
+};
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct Allocation {
@@ -97,5 +99,25 @@ impl LinearAllocator {
 
     pub const fn capacity_bytes(&self) -> usize {
         self.capacity_bytes
+    }
+}
+
+impl Allocator for LinearAllocator {
+    fn allocate(&mut self, layout: MemoryLayout) -> MemoryResult<Allocation> {
+        LinearAllocator::allocate(self, layout)
+    }
+
+    fn stats(&self) -> AllocationStats {
+        LinearAllocator::stats(self)
+    }
+
+    fn capacity_bytes(&self) -> usize {
+        LinearAllocator::capacity_bytes(self)
+    }
+}
+
+impl ResettableAllocator for LinearAllocator {
+    fn reset(&mut self) {
+        LinearAllocator::reset(self);
     }
 }
