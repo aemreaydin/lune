@@ -16,4 +16,7 @@ pub enum MemoryError {
         capacity: usize,
         used: usize,
     },
+
+    #[error("pool allocation was already freed: slot {slot_index}, generation {generation}")]
+    DoubleFree { slot_index: usize, generation: u64 },
 }

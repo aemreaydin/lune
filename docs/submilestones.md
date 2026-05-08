@@ -203,11 +203,11 @@ linear allocation patterns.
 
 Acceptance criteria:
 
-- [ ] aligned allocations succeed when capacity allows
-- [ ] out-of-memory returns typed error
-- [ ] reset reuses memory
-- [ ] Miri-relevant tests pass where applicable
-- [ ] allocation stats are updated
+- [x] aligned allocations succeed when capacity allows
+- [x] out-of-memory returns typed error
+- [x] reset reuses memory
+- [x] Miri-relevant tests pass where applicable
+- [x] allocation stats are updated
 
 ### M2.4 Implement Frame Allocator Wrapper
 
@@ -220,9 +220,10 @@ can be reset at frame boundaries.
 
 Acceptance criteria:
 
-- [ ] frame reset invalidation rules are documented
-- [ ] allocation and reset behavior is tested
-- [ ] misuse cases are covered by API design or tests
+- [x] frame reset invalidation rules are documented
+- [x] allocation and reset behavior is tested
+- [x] misuse cases are covered by API design or tests
+- [x] `FrameAllocator` production logic is implemented
 
 ### M2.5 Implement Pool Allocator
 
@@ -235,10 +236,12 @@ reuse behavior.
 
 Acceptance criteria:
 
-- [ ] allocate/free/reuse behavior is tested
-- [ ] double-free is detected or prevented
-- [ ] capacity and alignment behavior is tested
-- [ ] stats expose active and free slots
+- [x] learning doc explains pool allocator behavior
+- [x] allocate/free/reuse behavior is tested
+- [x] double-free behavior is tested
+- [x] capacity and alignment behavior is tested
+- [x] stats expose active and free slots in the test contract
+- [ ] `PoolAllocator` production logic replaces `todo!()` stubs
 
 ### M2.6 Explain Small Game Containers
 

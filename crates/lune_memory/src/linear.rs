@@ -71,9 +71,11 @@ impl LinearAllocator {
 
         self.stats.capacity_bytes = self.capacity_bytes;
         self.stats.successful_allocations += 1;
-        self.stats.used_bytes = alloc_end;
+        if layout.size() != 0 {
+            self.stats.used_bytes = alloc_end;
+            self.cursor = alloc_end;
+        }
         self.stats.peak_used_bytes = self.stats.used_bytes.max(self.stats.peak_used_bytes);
-        self.cursor = alloc_end;
 
         Ok(allocation)
     }

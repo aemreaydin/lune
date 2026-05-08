@@ -111,6 +111,52 @@ fn linear_allocator_allows_zero_sized_allocations_without_consuming_capacity() {
 }
 
 #[test]
+fn zero_sized_allocations_align_metadata_without_advancing_cursor() {
+    let mut allocator = LinearAllocator::with_capacity(16);
+
+    allocator.allocate(layout(1, 1)).unwrap();
+
+    let zero = allocator.allocate(layout(0, 8)).unwrap();
+
+    assert_eq!(zero.offset(), 8);
+    assert_eq!(zero.size(), 0);
+    assert_eq!(zero.align(), 8);
+
+    let stats_after_zero = allocator.stats();
+    assert_eq!(stats_after_zero.used_bytes(), 1);
+    assert_eq!(stats_after_zero.peak_used_bytes(), 1);
+    assert_eq!(stats_after_zero.successful_allocations(), 2);
+
+    let next = allocator.allocate(layout(1, 1)).unwrap();
+    assert_eq!(next.offset(), 1);
+    assert_eq!(allocator.stats().used_bytes(), 2);
+}
+
+#[test]
+fn zero_sized_allocations_report_out_of_memory_when_aligned_metadata_exceeds_capacity() {
+    let mut allocator = LinearAllocator::with_capacity(1);
+
+    allocator.allocate(layout(1, 1)).unwrap();
+
+    let err = allocator.allocate(layout(0, 8)).unwrap_err();
+    assert_eq!(
+        err,
+        MemoryError::OutOfMemory {
+            requested_size: 0,
+            align: 8,
+            capacity: 1,
+            used: 1,
+        },
+    );
+
+    let stats = allocator.stats();
+    assert_eq!(stats.used_bytes(), 1);
+    assert_eq!(stats.peak_used_bytes(), 1);
+    assert_eq!(stats.successful_allocations(), 1);
+    assert_eq!(stats.failed_allocations(), 1);
+}
+
+#[test]
 fn linear_allocator_reports_out_of_memory_when_alignment_math_overflows() {
     let mut allocator = LinearAllocator::with_capacity(usize::MAX);
 
@@ -122,6 +168,30 @@ fn linear_allocator_reports_out_of_memory_when_alignment_math_overflows() {
         MemoryError::OutOfMemory {
             requested_size: 1,
             align: 8,
+            capacity: usize::MAX,
+            used: usize::MAX - 1,
+        },
+    );
+
+    let stats = allocator.stats();
+    assert_eq!(stats.used_bytes(), usize::MAX - 1);
+    assert_eq!(stats.peak_used_bytes(), usize::MAX - 1);
+    assert_eq!(stats.successful_allocations(), 1);
+    assert_eq!(stats.failed_allocations(), 1);
+}
+
+#[test]
+fn linear_allocator_reports_out_of_memory_when_allocation_end_math_overflows() {
+    let mut allocator = LinearAllocator::with_capacity(usize::MAX);
+
+    allocator.allocate(layout(usize::MAX - 1, 1)).unwrap();
+
+    let err = allocator.allocate(layout(2, 1)).unwrap_err();
+    assert_eq!(
+        err,
+        MemoryError::OutOfMemory {
+            requested_size: 2,
+            align: 1,
             capacity: usize::MAX,
             used: usize::MAX - 1,
         },
