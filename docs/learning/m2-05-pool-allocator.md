@@ -2,7 +2,7 @@
 
 ## Status
 
-Scaffolded.
+Implemented.
 
 ## Goal
 
@@ -110,6 +110,10 @@ The current API surface is:
 - `PoolStats`: reports capacity and active/free slot pressure
 - `MemoryError::OutOfMemory`: reports full pool or arithmetic overflow
 - `MemoryError::DoubleFree`: reports repeated free of copied allocation metadata
+- `MemoryError::InvalidPoolAllocation`: reports allocation metadata from another
+  pool
+- `MemoryError::PoolGenerationOverflow`: reports exhausted slot generation
+  metadata
 
 The pool uses inherent `allocate` and `free` methods first. It does not need to
 implement `Allocator` in M2.5 because the base trait cannot express `free`, and
@@ -137,8 +141,7 @@ They define this behavior:
 - slot stride preserves alignment for every slot
 - stats expose active slots, free slots, peak activity, capacity, and counts
 
-These tests are expected to compile and fail at `todo!()` boundaries until the
-production implementation is filled in.
+These tests compile and pass once the production implementation is filled in.
 
 ## Implementation Handles
 

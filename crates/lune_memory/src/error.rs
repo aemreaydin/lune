@@ -19,4 +19,15 @@ pub enum MemoryError {
 
     #[error("pool allocation was already freed: slot {slot_index}, generation {generation}")]
     DoubleFree { slot_index: usize, generation: u64 },
+
+    #[error(
+        "pool allocation does not belong to this allocator: slot {slot_index}, generation {generation}"
+    )]
+    InvalidPoolAllocation { slot_index: usize, generation: u64 },
+
+    #[error("pool slot generation overflowed: slot {slot_index}")]
+    PoolGenerationOverflow { slot_index: usize },
+
+    #[error("pool allocator identity counter exhausted")]
+    PoolIdentityExhausted,
 }

@@ -1,7 +1,14 @@
 use crate::{MemoryError, MemoryLayout, MemoryResult};
+use std::{
+    collections::BTreeSet,
+    sync::atomic::{AtomicU64, Ordering},
+};
+
+static NEXT_POOL_ID: AtomicU64 = AtomicU64::new(1);
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct PoolAllocation {
+    pool_id: u64,
     slot_index: usize,
     generation: u64,
     offset: usize,
@@ -93,6 +100,12 @@ pub struct PoolAllocator {
     slot_stride: usize,
     slot_count: usize,
     capacity_bytes: usize,
+    pool_id: u64,
+
+    stats: PoolStats,
+
+    slot_generations: Vec<u64>,
+    free_slots: BTreeSet<usize>,
 }
 
 impl PoolAllocator {
@@ -121,11 +134,28 @@ impl PoolAllocator {
                     used: 0,
                 })?;
 
+        let stats = PoolStats {
+            capacity_bytes,
+            slot_size: slot_layout.size(),
+            slot_align: slot_layout.align(),
+            slot_stride,
+            slot_count,
+            active_slots: 0,
+            free_slots: slot_count,
+            peak_active_slots: 0,
+            successful_allocations: 0,
+            failed_allocations: 0,
+        };
+
         Ok(Self {
             slot_layout,
             slot_stride,
             slot_count,
             capacity_bytes,
+            pool_id: next_pool_id()?,
+            stats,
+            slot_generations: vec![0; slot_count],
+            free_slots: BTreeSet::from_iter(0..slot_count),
         })
     }
 
@@ -146,20 +176,94 @@ impl PoolAllocator {
     }
 
     pub fn allocate(&mut self) -> MemoryResult<PoolAllocation> {
-        todo!("implement fixed-size pool slot allocation")
+        let slot_index = match self.free_slots.first() {
+            Some(slot) => *slot,
+            None => {
+                self.stats.failed_allocations += 1;
+                return Err(MemoryError::OutOfMemory {
+                    requested_size: self.slot_layout.size(),
+                    align: self.slot_layout.align(),
+                    capacity: self.capacity_bytes,
+                    used: self.capacity_bytes,
+                });
+            }
+        };
+
+        let generation = match self.slot_generations[slot_index].checked_add(1) {
+            Some(generation) => generation,
+            None => {
+                self.stats.failed_allocations += 1;
+                return Err(MemoryError::PoolGenerationOverflow { slot_index });
+            }
+        };
+        self.slot_generations[slot_index] = generation;
+
+        let offset = self.slot_stride * slot_index;
+        self.free_slots.remove(&slot_index);
+
+        self.stats.active_slots += 1;
+        self.stats.free_slots -= 1;
+        self.stats.peak_active_slots = self.stats.peak_active_slots.max(self.stats.active_slots);
+        self.stats.successful_allocations += 1;
+
+        Ok(PoolAllocation {
+            pool_id: self.pool_id,
+            slot_index,
+            generation,
+            offset,
+            size: self.slot_layout.size(),
+            align: self.slot_layout.align(),
+        })
     }
 
     pub fn free(&mut self, allocation: PoolAllocation) -> MemoryResult<()> {
-        let _ = allocation;
-        todo!("implement pool slot free and double-free detection")
+        if allocation.pool_id != self.pool_id {
+            return Err(MemoryError::InvalidPoolAllocation {
+                slot_index: allocation.slot_index,
+                generation: allocation.generation,
+            });
+        }
+
+        let Some(&slot_generation) = self.slot_generations.get(allocation.slot_index) else {
+            return Err(MemoryError::InvalidPoolAllocation {
+                slot_index: allocation.slot_index,
+                generation: allocation.generation,
+            });
+        };
+
+        if self.free_slots.contains(&allocation.slot_index) {
+            return Err(MemoryError::DoubleFree {
+                slot_index: allocation.slot_index,
+                generation: allocation.generation,
+            });
+        }
+
+        if slot_generation != allocation.generation {
+            return Err(MemoryError::DoubleFree {
+                slot_index: allocation.slot_index,
+                generation: allocation.generation,
+            });
+        }
+
+        self.free_slots.insert(allocation.slot_index);
+        self.stats.active_slots -= 1;
+        self.stats.free_slots += 1;
+
+        Ok(())
     }
 
     pub fn stats(&self) -> PoolStats {
-        todo!("report pool active/free slot stats")
+        self.stats
     }
 }
 
 fn align_up(value: usize, align: usize) -> Option<usize> {
     let mask = align - 1;
     Some(value.checked_add(mask)? & !mask)
+}
+
+fn next_pool_id() -> MemoryResult<u64> {
+    NEXT_POOL_ID
+        .try_update(Ordering::Relaxed, Ordering::Relaxed, |id| id.checked_add(1))
+        .map_err(|_| MemoryError::PoolIdentityExhausted)
 }

@@ -241,7 +241,7 @@ Acceptance criteria:
 - [x] double-free behavior is tested
 - [x] capacity and alignment behavior is tested
 - [x] stats expose active and free slots in the test contract
-- [ ] `PoolAllocator` production logic replaces `todo!()` stubs
+- [x] `PoolAllocator` production logic replaces `todo!()` stubs
 
 ### M2.6 Explain Small Game Containers
 

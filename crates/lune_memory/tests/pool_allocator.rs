@@ -34,6 +34,39 @@ fn pool_allocator_allocates_fixed_size_slots_until_full() {
 }
 
 #[test]
+fn pool_allocator_reports_free_slots_before_pool_is_full() {
+    let mut allocator = PoolAllocator::with_layout(layout(8, 8), 3).unwrap();
+
+    let initial_stats = allocator.stats();
+    assert_eq!(initial_stats.active_slots(), 0);
+    assert_eq!(initial_stats.free_slots(), 3);
+    assert_eq!(
+        initial_stats.active_slots() + initial_stats.free_slots(),
+        initial_stats.slot_count()
+    );
+
+    allocator.allocate().unwrap();
+
+    let stats_after_one_allocation = allocator.stats();
+    assert_eq!(stats_after_one_allocation.active_slots(), 1);
+    assert_eq!(stats_after_one_allocation.free_slots(), 2);
+    assert_eq!(
+        stats_after_one_allocation.active_slots() + stats_after_one_allocation.free_slots(),
+        stats_after_one_allocation.slot_count()
+    );
+
+    allocator.allocate().unwrap();
+
+    let stats_after_two_allocations = allocator.stats();
+    assert_eq!(stats_after_two_allocations.active_slots(), 2);
+    assert_eq!(stats_after_two_allocations.free_slots(), 1);
+    assert_eq!(
+        stats_after_two_allocations.active_slots() + stats_after_two_allocations.free_slots(),
+        stats_after_two_allocations.slot_count()
+    );
+}
+
+#[test]
 fn pool_allocator_reports_out_of_memory_when_no_slots_are_free() {
     let mut allocator = PoolAllocator::with_layout(layout(8, 8), 1).unwrap();
 
@@ -58,6 +91,26 @@ fn pool_allocator_reports_out_of_memory_when_no_slots_are_free() {
 }
 
 #[test]
+fn full_pool_reports_reserved_capacity_for_padded_slots() {
+    let mut allocator = PoolAllocator::with_layout(layout(6, 4), 3).unwrap();
+
+    allocator.allocate().unwrap();
+    allocator.allocate().unwrap();
+    allocator.allocate().unwrap();
+
+    let err = allocator.allocate().unwrap_err();
+    assert_eq!(
+        err,
+        MemoryError::OutOfMemory {
+            requested_size: 6,
+            align: 4,
+            capacity: 24,
+            used: 24,
+        },
+    );
+}
+
+#[test]
 fn freeing_a_slot_makes_it_available_for_reuse() {
     let mut allocator = PoolAllocator::with_layout(layout(8, 8), 2).unwrap();
 
@@ -77,6 +130,45 @@ fn freeing_a_slot_makes_it_available_for_reuse() {
     assert_eq!(stats.free_slots(), 0);
     assert_eq!(stats.peak_active_slots(), 2);
     assert_eq!(stats.successful_allocations(), 3);
+}
+
+#[test]
+fn freeing_still_live_slot_succeeds_after_another_slot_is_freed() {
+    let mut allocator = PoolAllocator::with_layout(layout(8, 8), 3).unwrap();
+
+    let first = allocator.allocate().unwrap();
+    let second = allocator.allocate().unwrap();
+    let third = allocator.allocate().unwrap();
+
+    allocator.free(first).unwrap();
+    allocator.free(second).unwrap();
+
+    let stats = allocator.stats();
+    assert_eq!(stats.active_slots(), 1);
+    assert_eq!(stats.free_slots(), 2);
+
+    assert_eq!(third.slot_index(), 2);
+}
+
+#[test]
+fn freeing_allocation_from_another_pool_is_rejected_without_changing_stats() {
+    let mut source = PoolAllocator::with_layout(layout(8, 8), 1).unwrap();
+    let mut target = PoolAllocator::with_layout(layout(8, 8), 1).unwrap();
+
+    let foreign_allocation = source.allocate().unwrap();
+
+    let err = target.free(foreign_allocation).unwrap_err();
+    assert_eq!(
+        err,
+        MemoryError::InvalidPoolAllocation {
+            slot_index: foreign_allocation.slot_index(),
+            generation: foreign_allocation.generation(),
+        },
+    );
+
+    let stats = target.stats();
+    assert_eq!(stats.active_slots(), 0);
+    assert_eq!(stats.free_slots(), 1);
 }
 
 #[test]
