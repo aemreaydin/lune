@@ -17,13 +17,6 @@ pub struct ConfigLayer {
 }
 
 pub fn parse_config_layer(source: impl Into<String>, toml_text: &str) -> ConfigResult<ConfigLayer> {
-    let source = source.into();
-
-    match toml::from_str(toml_text) {
-        Ok(config_layer) => Ok(config_layer),
-        Err(err) => Err(ConfigError::Parse {
-            source_name: source,
-            message: err.to_string(),
-        }),
-    }
+    let source_name = source.into();
+    toml::from_str(toml_text).map_err(|cause| ConfigError::Parse { source_name, cause })
 }

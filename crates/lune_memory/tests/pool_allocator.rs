@@ -172,6 +172,29 @@ fn freeing_allocation_from_another_pool_is_rejected_without_changing_stats() {
 }
 
 #[test]
+fn freeing_stale_handle_after_slot_reuse_reports_stale_allocation() {
+    let mut allocator = PoolAllocator::with_layout(layout(8, 8), 1).unwrap();
+
+    let original = allocator.allocate().unwrap();
+    allocator.free(original).unwrap();
+    let reused = allocator.allocate().unwrap();
+
+    let err = allocator.free(original).unwrap_err();
+    assert_eq!(
+        err,
+        MemoryError::StaleAllocation {
+            slot_index: original.slot_index(),
+            expected_generation: reused.generation(),
+            actual_generation: original.generation(),
+        },
+    );
+
+    let stats = allocator.stats();
+    assert_eq!(stats.active_slots(), 1);
+    assert_eq!(stats.free_slots(), 0);
+}
+
+#[test]
 fn double_free_reports_typed_error_without_changing_stats() {
     let mut allocator = PoolAllocator::with_layout(layout(8, 8), 1).unwrap();
 

@@ -47,6 +47,7 @@ pub struct PoolStats {
     slot_count: usize,
     active_slots: usize,
     free_slots: usize,
+    exhausted_slots: usize,
     peak_active_slots: usize,
     successful_allocations: usize,
     failed_allocations: usize,
@@ -81,6 +82,10 @@ impl PoolStats {
         self.free_slots
     }
 
+    pub const fn exhausted_slots(&self) -> usize {
+        self.exhausted_slots
+    }
+
     pub const fn peak_active_slots(&self) -> usize {
         self.peak_active_slots
     }
@@ -111,28 +116,22 @@ pub struct PoolAllocator {
 impl PoolAllocator {
     pub fn with_layout(slot_layout: MemoryLayout, slot_count: usize) -> MemoryResult<Self> {
         if slot_layout.size() == 0 {
-            return Err(MemoryError::InvalidLayout {
-                size: slot_layout.size(),
+            return Err(MemoryError::ZeroSizedSlot {
                 align: slot_layout.align(),
             });
         }
 
+        let capacity_overflow = || MemoryError::CapacityOverflow {
+            slot_size: slot_layout.size(),
+            slot_align: slot_layout.align(),
+            slot_count,
+        };
+
         let slot_stride =
-            align_up(slot_layout.size(), slot_layout.align()).ok_or(MemoryError::OutOfMemory {
-                requested_size: slot_layout.size(),
-                align: slot_layout.align(),
-                capacity: usize::MAX,
-                used: 0,
-            })?;
-        let capacity_bytes =
-            slot_stride
-                .checked_mul(slot_count)
-                .ok_or(MemoryError::OutOfMemory {
-                    requested_size: slot_stride,
-                    align: slot_layout.align(),
-                    capacity: usize::MAX,
-                    used: 0,
-                })?;
+            align_up(slot_layout.size(), slot_layout.align()).ok_or_else(capacity_overflow)?;
+        let capacity_bytes = slot_stride
+            .checked_mul(slot_count)
+            .ok_or_else(capacity_overflow)?;
 
         let stats = PoolStats {
             capacity_bytes,
@@ -142,6 +141,7 @@ impl PoolAllocator {
             slot_count,
             active_slots: 0,
             free_slots: slot_count,
+            exhausted_slots: 0,
             peak_active_slots: 0,
             successful_allocations: 0,
             failed_allocations: 0,
@@ -192,6 +192,9 @@ impl PoolAllocator {
         let generation = match self.slot_generations[slot_index].checked_add(1) {
             Some(generation) => generation,
             None => {
+                self.free_slots.remove(&slot_index);
+                self.stats.free_slots -= 1;
+                self.stats.exhausted_slots += 1;
                 self.stats.failed_allocations += 1;
                 return Err(MemoryError::PoolGenerationOverflow { slot_index });
             }
@@ -239,9 +242,10 @@ impl PoolAllocator {
         }
 
         if slot_generation != allocation.generation {
-            return Err(MemoryError::DoubleFree {
+            return Err(MemoryError::StaleAllocation {
                 slot_index: allocation.slot_index,
-                generation: allocation.generation,
+                expected_generation: slot_generation,
+                actual_generation: allocation.generation,
             });
         }
 
@@ -258,7 +262,7 @@ impl PoolAllocator {
 }
 
 fn align_up(value: usize, align: usize) -> Option<usize> {
-    let mask = align - 1;
+    let mask = align.wrapping_sub(1);
     Some(value.checked_add(mask)? & !mask)
 }
 

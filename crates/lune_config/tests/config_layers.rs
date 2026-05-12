@@ -18,7 +18,7 @@ fn fixture_config() -> LuneConfig {
             vsync: true,
         },
         renderer: RendererConfig {
-            backend: "auto".to_owned(),
+            backend: RendererBackend::Auto,
             clear_color: [0.02, 0.02, 0.025, 1.0],
         },
         assets: AssetsConfig {
@@ -37,7 +37,7 @@ fn built_in_defaults_are_stable() {
     assert_eq!(config.window.width, 1280);
     assert_eq!(config.window.height, 720);
     assert!(config.window.vsync);
-    assert_eq!(config.renderer.backend, "auto");
+    assert_eq!(config.renderer.backend, RendererBackend::Auto);
     assert_eq!(config.renderer.clear_color, [0.02, 0.02, 0.025, 1.0]);
     assert_eq!(config.assets.search_paths, vec!["assets"]);
 }
@@ -84,7 +84,7 @@ fn config_layer_deserializes_from_toml() {
     assert_eq!(window.vsync, Some(false));
 
     let renderer = layer.renderer.unwrap();
-    assert_eq!(renderer.backend.as_deref(), Some("vulkan"));
+    assert_eq!(renderer.backend, Some(RendererBackend::Vulkan));
     assert_eq!(renderer.clear_color, Some([0.1, 0.2, 0.3, 1.0]));
 
     assert_eq!(
@@ -103,7 +103,9 @@ fn unknown_root_fields_are_rejected() {
     )
     .unwrap_err();
 
-    assert!(err.to_string().contains("unknown field"));
+    assert!(err.to_string().contains("failed to parse"));
+    let source = std::error::Error::source(&err).expect("parse error should carry toml cause");
+    assert!(source.to_string().contains("unknown field"));
 }
 
 #[test]
@@ -117,7 +119,23 @@ fn unknown_nested_fields_are_rejected() {
     )
     .unwrap_err();
 
-    assert!(err.to_string().contains("unknown field"));
+    let source = std::error::Error::source(&err).expect("parse error should carry toml cause");
+    assert!(source.to_string().contains("unknown field"));
+}
+
+#[test]
+fn unknown_renderer_backend_is_rejected() {
+    let err = parse_config_layer(
+        "Lune.toml",
+        r#"
+        [renderer]
+        backend = "vulcan"
+        "#,
+    )
+    .unwrap_err();
+
+    let source = std::error::Error::source(&err).expect("parse error should carry toml cause");
+    assert!(source.to_string().contains("vulcan"));
 }
 
 #[test]
@@ -125,12 +143,9 @@ fn parse_config_layer_reports_source_name_on_parse_error() {
     let err = parse_config_layer("broken/Showcase.toml", "[window").unwrap_err();
 
     match err {
-        ConfigError::Parse {
-            source_name,
-            message,
-        } => {
+        ConfigError::Parse { source_name, cause } => {
             assert_eq!(source_name, "broken/Showcase.toml");
-            assert!(!message.is_empty());
+            assert!(!cause.to_string().is_empty());
         }
     }
 }
@@ -161,7 +176,7 @@ fn defaults_root_and_showcase_merge_in_order() {
     )
     .unwrap();
 
-    let merged = merge_config_layers(&[root, showcase]).unwrap();
+    let merged = merge_config_layers(&[root, showcase]);
 
     assert_eq!(merged.app.name, "Showcase Name");
     assert_eq!(merged.window.title, "Root Window");
@@ -195,13 +210,13 @@ fn nested_tables_merge_without_clearing_sibling_fields() {
     .unwrap();
 
     let mut merged = fixture_config();
-    merge_config_layers_onto(&mut merged, &[root, showcase]).unwrap();
+    merge_config_layers_onto(&mut merged, &[root, showcase]);
 
     assert_eq!(merged.window.title, "Fixture Window");
     assert_eq!(merged.window.width, 1600);
     assert_eq!(merged.window.height, 900);
     assert!(merged.window.vsync);
-    assert_eq!(merged.renderer.backend, "vulkan");
+    assert_eq!(merged.renderer.backend, RendererBackend::Vulkan);
     assert_eq!(merged.renderer.clear_color, [0.3, 0.2, 0.1, 1.0]);
 }
 
@@ -226,7 +241,7 @@ fn diagnostics_table_merges_without_clearing_sibling_fields() {
     .unwrap();
 
     let mut merged = fixture_config();
-    merge_config_layers_onto(&mut merged, &[root, showcase]).unwrap();
+    merge_config_layers_onto(&mut merged, &[root, showcase]);
 
     assert_eq!(merged.diagnostics.level, DiagnosticsLevel::Debug);
     assert_eq!(merged.diagnostics.format, LogFormat::Pretty);
@@ -253,7 +268,7 @@ fn arrays_replace_instead_of_append() {
     .unwrap();
 
     let mut merged = fixture_config();
-    merge_config_layers_onto(&mut merged, &[root, showcase]).unwrap();
+    merge_config_layers_onto(&mut merged, &[root, showcase]);
 
     assert_eq!(merged.assets.search_paths, vec!["showcases/smoke/assets"],);
 }
@@ -261,7 +276,7 @@ fn arrays_replace_instead_of_append() {
 #[test]
 fn empty_layers_keep_existing_values() {
     let mut merged = fixture_config();
-    merge_config_layers_onto(&mut merged, &[ConfigLayer::default()]).unwrap();
+    merge_config_layers_onto(&mut merged, &[ConfigLayer::default()]);
 
     assert_eq!(merged, fixture_config());
 }

@@ -36,19 +36,16 @@ use thiserror::Error;
 
 pub type DiagnosticsResult<T> = std::result::Result<T, DiagnosticsError>;
 
-#[derive(Debug, Error, PartialEq, Eq)]
+#[derive(Debug, Error)]
 pub enum DiagnosticsError {
     #[error("diagnostics have already been initialized")]
-    AlreadyInitialized,
+    AlreadyInitialized(#[from] tracing::subscriber::SetGlobalDefaultError),
 
     #[error("failed to install log bridge")]
-    LogBridgeInstall,
+    LogBridgeInstall(#[from] log::SetLoggerError),
 }
 
 pub fn init_diagnostics(config: DiagnosticsConfig) -> DiagnosticsResult<()> {
-    if config.log_bridge == LogBridge::Enabled {
-        tracing_log::LogTracer::init().map_err(|_| DiagnosticsError::LogBridgeInstall)?
-    }
     let level = match config.level {
         DiagnosticsLevel::Trace => tracing::Level::TRACE,
         DiagnosticsLevel::Debug => tracing::Level::DEBUG,
@@ -56,15 +53,18 @@ pub fn init_diagnostics(config: DiagnosticsConfig) -> DiagnosticsResult<()> {
         DiagnosticsLevel::Warn => tracing::Level::WARN,
         DiagnosticsLevel::Error => tracing::Level::ERROR,
     };
-    let subscriber = tracing_subscriber::fmt()
-        .with_max_level(level)
-        .with_level(true);
+    let subscriber = tracing_subscriber::fmt().with_max_level(level);
 
     match config.format {
         LogFormat::Compact => {
-            tracing::subscriber::set_global_default(subscriber.compact().finish())
+            tracing::subscriber::set_global_default(subscriber.compact().finish())?
         }
-        LogFormat::Pretty => tracing::subscriber::set_global_default(subscriber.pretty().finish()),
+        LogFormat::Pretty => tracing::subscriber::set_global_default(subscriber.pretty().finish())?,
     }
-    .map_err(|_| DiagnosticsError::AlreadyInitialized)
+
+    if config.log_bridge == LogBridge::Enabled {
+        tracing_log::LogTracer::init()?;
+    }
+
+    Ok(())
 }

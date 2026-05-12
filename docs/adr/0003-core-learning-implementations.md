@@ -35,9 +35,8 @@ safety lesson. Crates such as `smallvec`, `arrayvec`, `slotmap`, `hecs`,
 custom implementations.
 
 Unsafe Rust is allowed only in low-level crates such as `lune_memory`,
-`lune_collections`, `lune_render_vulkan`, and FFI/platform boundaries. Unsafe
-blocks require safety comments. High-level crates and showcases must not use
-unsafe.
+`lune_collections`, `lune_render_vulkan`, and FFI/platform boundaries.
+High-level crates and showcases must not use unsafe.
 
 ## Consequences
 

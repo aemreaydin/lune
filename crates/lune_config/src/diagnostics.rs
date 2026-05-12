@@ -1,3 +1,4 @@
+use crate::MergeInto;
 use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Debug, Deserialize, PartialEq, Eq, Serialize)]
@@ -14,6 +15,20 @@ pub struct DiagnosticsConfigLayer {
     pub level: Option<DiagnosticsLevel>,
     pub format: Option<LogFormat>,
     pub log_bridge: Option<LogBridge>,
+}
+
+impl MergeInto<DiagnosticsConfig> for DiagnosticsConfigLayer {
+    fn merge_into(&self, target: &mut DiagnosticsConfig) {
+        if let Some(level) = self.level {
+            target.level = level;
+        }
+        if let Some(format) = self.format {
+            target.format = format;
+        }
+        if let Some(log_bridge) = self.log_bridge {
+            target.log_bridge = log_bridge;
+        }
+    }
 }
 
 impl DiagnosticsConfig {

@@ -1,7 +1,6 @@
+use lune_collections::{CollectionError, FixedVec};
 use std::cell::Cell;
 use std::rc::Rc;
-
-use lune_collections::{CollectionError, FixedVec};
 
 #[test]
 fn fixed_vec_starts_empty_with_const_capacity() {

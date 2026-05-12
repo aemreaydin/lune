@@ -37,7 +37,7 @@ fn reset_frame_reuses_capacity_and_invalidates_prior_allocations() {
 
     let stale = allocator.allocate(layout(8, 8)).unwrap();
 
-    allocator.reset_frame();
+    allocator.reset_frame().unwrap();
 
     assert_eq!(allocator.frame_index(), 1);
     assert!(!allocator.is_current(&stale));
@@ -58,7 +58,7 @@ fn reset_frame_reuses_capacity_and_invalidates_prior_allocations() {
 fn reset_frame_without_allocations_advances_frame_and_keeps_stats_empty() {
     let mut allocator = FrameAllocator::with_capacity(16);
 
-    allocator.reset_frame();
+    allocator.reset_frame().unwrap();
 
     assert_eq!(allocator.frame_index(), 1);
     assert_eq!(allocator.stats().capacity_bytes(), 16);
@@ -84,7 +84,7 @@ fn reset_frame_after_failed_allocation_reuses_capacity() {
         },
     );
 
-    allocator.reset_frame();
+    allocator.reset_frame().unwrap();
 
     assert_eq!(allocator.frame_index(), 1);
     assert_eq!(allocator.stats().used_bytes(), 0);

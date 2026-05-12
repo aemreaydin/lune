@@ -269,9 +269,9 @@ hot-path data.
 
 Acceptance criteria:
 
-- [ ] push/pop/clear/iteration behavior is tested
-- [ ] capacity overflow is explicit
-- [ ] drop behavior is tested
+- [x] push/pop/clear/iteration behavior is tested
+- [x] capacity overflow is explicit
+- [x] drop behavior is tested
 - [ ] Miri passes for this crate
 
 ### M2.8 Implement `SmallVec<T, N>`
@@ -285,10 +285,10 @@ for common small collections.
 
 Acceptance criteria:
 
-- [ ] inline path is tested
-- [ ] spill path is tested
-- [ ] moves, drops, and capacity transitions are tested
-- [ ] property tests cover push/pop equivalence with `Vec`
+- [x] inline path is tested
+- [x] spill path is tested
+- [x] moves, drops, and capacity transitions are tested
+- [x] property tests cover push/pop equivalence with `Vec`
 
 ### M2.9 Implement `SmallString<N>`
 

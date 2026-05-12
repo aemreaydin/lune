@@ -20,17 +20,33 @@ pub use diagnostics::{
     DiagnosticsConfig, DiagnosticsConfigLayer, DiagnosticsLevel, LogBridge, LogFormat,
 };
 pub use layer::{ConfigLayer, parse_config_layer};
-pub use renderer::{RendererConfig, RendererConfigLayer};
+pub use renderer::{RendererBackend, RendererConfig, RendererConfigLayer};
 pub use window::{WindowConfig, WindowConfigLayer};
 
 pub type ConfigResult<T> = std::result::Result<T, ConfigError>;
 
-#[derive(Debug, Error, PartialEq, Eq)]
+pub trait MergeInto<T> {
+    fn merge_into(&self, target: &mut T);
+}
+
+impl<L, T> MergeInto<T> for Option<L>
+where
+    L: MergeInto<T>,
+{
+    fn merge_into(&self, target: &mut T) {
+        if let Some(layer) = self {
+            layer.merge_into(target);
+        }
+    }
+}
+
+#[derive(Debug, Error)]
 pub enum ConfigError {
-    #[error("failed to parse `{source_name}`: {message}")]
+    #[error("failed to parse `{source_name}`")]
     Parse {
         source_name: String,
-        message: String,
+        #[source]
+        cause: toml::de::Error,
     },
 }
 
@@ -57,7 +73,7 @@ impl Default for LuneConfig {
                 vsync: true,
             },
             renderer: RendererConfig {
-                backend: "auto".to_owned(),
+                backend: RendererBackend::Auto,
                 clear_color: [0.02, 0.02, 0.025, 1.0],
             },
             assets: AssetsConfig {
@@ -67,72 +83,22 @@ impl Default for LuneConfig {
     }
 }
 
-pub fn merge_config_layers(layers: &[ConfigLayer]) -> ConfigResult<LuneConfig> {
+pub fn merge_config_layers(layers: &[ConfigLayer]) -> LuneConfig {
     let mut config = LuneConfig::default();
-    apply_config_layers(&mut config, layers)?;
-    Ok(config)
+    apply_config_layers(&mut config, layers);
+    config
 }
 
-pub fn merge_config_layers_onto(base: &mut LuneConfig, layers: &[ConfigLayer]) -> ConfigResult<()> {
-    apply_config_layers(base, layers)
+pub fn merge_config_layers_onto(base: &mut LuneConfig, layers: &[ConfigLayer]) {
+    apply_config_layers(base, layers);
 }
 
-fn apply_config_layers(config: &mut LuneConfig, layers: &[ConfigLayer]) -> ConfigResult<()> {
+fn apply_config_layers(config: &mut LuneConfig, layers: &[ConfigLayer]) {
     for layer in layers {
-        if let Some(app) = &layer.app
-            && let Some(name) = &app.name
-        {
-            config.app.name = name.clone();
-        }
-
-        if let Some(diagnostics) = &layer.diagnostics {
-            if let Some(level) = diagnostics.level {
-                config.diagnostics.level = level;
-            }
-
-            if let Some(format) = diagnostics.format {
-                config.diagnostics.format = format;
-            }
-
-            if let Some(log_bridge) = diagnostics.log_bridge {
-                config.diagnostics.log_bridge = log_bridge;
-            }
-        }
-
-        if let Some(window) = &layer.window {
-            if let Some(title) = &window.title {
-                config.window.title = title.clone();
-            }
-
-            if let Some(width) = window.width {
-                config.window.width = width;
-            }
-
-            if let Some(height) = window.height {
-                config.window.height = height;
-            }
-
-            if let Some(vsync) = window.vsync {
-                config.window.vsync = vsync;
-            }
-        }
-
-        if let Some(renderer) = &layer.renderer {
-            if let Some(backend) = &renderer.backend {
-                config.renderer.backend = backend.clone();
-            }
-
-            if let Some(clear_color) = renderer.clear_color {
-                config.renderer.clear_color = clear_color;
-            }
-        }
-
-        if let Some(assets) = &layer.assets
-            && let Some(search_paths) = &assets.search_paths
-        {
-            config.assets.search_paths = search_paths.clone();
-        }
+        layer.app.merge_into(&mut config.app);
+        layer.diagnostics.merge_into(&mut config.diagnostics);
+        layer.window.merge_into(&mut config.window);
+        layer.renderer.merge_into(&mut config.renderer);
+        layer.assets.merge_into(&mut config.assets);
     }
-
-    Ok(())
 }

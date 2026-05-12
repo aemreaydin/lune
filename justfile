@@ -33,7 +33,7 @@ coverage:
     cargo llvm-cov nextest --workspace
 
 miri:
-    cargo miri test --workspace
+    cargo +nightly miri test --workspace
 
 bench:
     cargo bench --workspace

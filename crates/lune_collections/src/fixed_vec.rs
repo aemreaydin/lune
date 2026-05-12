@@ -1,8 +1,7 @@
+use crate::{CollectionError, CollectionResult};
 use std::mem::MaybeUninit;
 use std::ops::{Deref, DerefMut};
 use std::slice;
-
-use crate::{CollectionError, CollectionResult};
 
 #[derive(Debug)]
 pub struct FixedVec<T, const N: usize> {
@@ -60,9 +59,7 @@ impl<T, const N: usize> FixedVec<T, N> {
     pub fn clear(&mut self) {
         while self.len > 0 {
             self.len -= 1;
-            unsafe {
-                self.elements[self.len].assume_init_drop();
-            }
+            unsafe { self.elements[self.len].assume_init_drop() };
         }
     }
 

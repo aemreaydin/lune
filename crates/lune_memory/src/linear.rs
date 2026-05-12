@@ -69,7 +69,6 @@ impl LinearAllocator {
             align: layout.align(),
         };
 
-        self.stats.capacity_bytes = self.capacity_bytes;
         self.stats.successful_allocations += 1;
         if layout.size() != 0 {
             self.stats.used_bytes = alloc_end;

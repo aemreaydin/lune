@@ -1,6 +1,6 @@
 use crate::{
-    Allocation, AllocationStats, Allocator, LinearAllocator, MemoryLayout, MemoryResult,
-    ResettableAllocator,
+    Allocation, AllocationStats, Allocator, LinearAllocator, MemoryError, MemoryLayout,
+    MemoryResult, ResettableAllocator,
 };
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -55,12 +55,16 @@ impl FrameAllocator {
         })
     }
 
-    pub fn reset_frame(&mut self) {
-        self.frame_index = self
+    pub fn reset_frame(&mut self) -> MemoryResult<()> {
+        let next = self
             .frame_index
             .checked_add(1)
-            .expect("frame_index overflow");
+            .ok_or(MemoryError::FrameIndexOverflow {
+                current_frame_index: self.frame_index,
+            })?;
+        self.frame_index = next;
         self.linear.reset();
+        Ok(())
     }
 
     pub fn is_current(&self, allocation: &FrameAllocation) -> bool {
@@ -96,6 +100,6 @@ impl Allocator for FrameAllocator {
 
 impl ResettableAllocator for FrameAllocator {
     fn reset(&mut self) {
-        self.reset_frame();
+        self.reset_frame().expect("frame_index overflow");
     }
 }
