@@ -254,9 +254,9 @@ engines use small vector/string types.
 
 Acceptance criteria:
 
-- [ ] learning doc covers `SmallVec`, `SmallString`, `FixedVec`, and ring buffers
-- [ ] reference crates are discussed but not depended on
-- [ ] test plan emphasizes boundary conditions
+- [x] learning doc covers `SmallVec`, `SmallString`, `FixedVec`, and ring buffers
+- [x] reference crates are discussed but not depended on
+- [x] test plan emphasizes boundary conditions
 
 ### M2.7 Implement `FixedVec<T, N>`
 
