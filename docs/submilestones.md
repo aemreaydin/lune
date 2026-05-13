@@ -301,10 +301,10 @@ allocation for common names and labels.
 
 Acceptance criteria:
 
-- [ ] valid UTF-8 invariant is preserved
-- [ ] inline and spill paths are tested
-- [ ] push/clear/formatting behavior is tested
-- [ ] invalid boundary cases are tested
+- [x] valid UTF-8 invariant is preserved
+- [x] inline and spill paths are tested
+- [x] push/clear/formatting behavior is tested
+- [x] invalid boundary cases are tested
 
 ### M2.10 Implement Ring Buffer
 

@@ -47,10 +47,7 @@ impl<T, const N: usize> SmallVec<T, N> {
     }
 
     pub fn is_spilled(&self) -> bool {
-        match self.elements {
-            SmallVecData::Inline(_) => false,
-            SmallVecData::Heap { .. } => true,
-        }
+        matches!(self.elements, SmallVecData::Heap { .. })
     }
 
     pub fn push(&mut self, value: T) -> CollectionResult<()> {
