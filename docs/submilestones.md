@@ -317,10 +317,10 @@ logs, and future job queues.
 
 Acceptance criteria:
 
-- [ ] wraparound behavior is tested
-- [ ] full/empty behavior is explicit
-- [ ] iteration order is tested
-- [ ] overwrite vs reject policy is documented
+- [x] wraparound behavior is tested
+- [x] full/empty behavior is explicit
+- [x] iteration order is tested
+- [x] overwrite vs reject policy is documented
 
 ## Milestone 3: Entities and ECS Internals
 

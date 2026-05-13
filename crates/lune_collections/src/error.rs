@@ -7,6 +7,8 @@ pub type CollectionResult<T> = std::result::Result<T, CollectionError>;
 pub enum CollectionError {
     #[error("fixed vector capacity exceeded: capacity {capacity}")]
     FixedCapacityExceeded { capacity: usize },
+    #[error("ring buffer is full: capacity {capacity}")]
+    RingBufferFull { capacity: usize },
     #[error("failed to allocate memory during spillage: layout {layout:?}")]
     AllocationError { layout: Layout },
     #[error("layout overflowed: capacity {capacity}")]
