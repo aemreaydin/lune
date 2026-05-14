@@ -335,9 +335,9 @@ entities, assets, and resources.
 
 Acceptance criteria:
 
-- [ ] learning doc covers index/generation/free-list pattern
-- [ ] tests define spawn/despawn/reuse behavior
-- [ ] overflow and invalid handle policy is documented
+- [x] learning doc covers index/generation/free-list pattern
+- [x] tests define spawn/despawn/reuse behavior
+- [x] overflow and invalid handle policy is documented
 
 ### M3.2 Implement Entity Slot Table
 
@@ -350,10 +350,10 @@ slot table.
 
 Acceptance criteria:
 
-- [ ] spawn creates live entities
-- [ ] despawn invalidates old handles
-- [ ] recycled index increments generation
-- [ ] invalid/despawned entities are rejected
+- [x] spawn creates live entities
+- [x] despawn invalidates old handles
+- [x] recycled index increments generation
+- [x] invalid/despawned entities are rejected
 
 ### M3.3 Explain Archetype ECS Storage
 

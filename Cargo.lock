@@ -202,6 +202,13 @@ dependencies = [
 ]
 
 [[package]]
+name = "lune_core"
+version = "0.1.0"
+dependencies = [
+ "thiserror",
+]
+
+[[package]]
 name = "lune_diagnostics"
 version = "0.1.0"
 dependencies = [
